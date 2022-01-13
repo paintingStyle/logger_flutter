@@ -11,5 +11,9 @@ dependencies:
   flutter:
     sdk: flutter
 
-  logger: "1.0.0"
+  #logger: "1.0.0"
+  logger: 
+    git:
+      url:  https://github.com/paintingStyle/logger.git
+      
   sensors: ^2.0.3
