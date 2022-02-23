@@ -39,6 +39,8 @@ class MyApp extends StatelessWidget {
       home: Scaffold(
         body: LogConsoleOnShake(
           dark: true,
+          debugOnly: false,
+          showShareButton: true,
           child: Center(
             child: Text("Shake Phone to open Console."),
           ),

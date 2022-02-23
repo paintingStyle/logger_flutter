@@ -5,12 +5,22 @@ ListQueue<OutputEvent> _outputEventBuffer = ListQueue();
 class LogConsole extends StatefulWidget {
   final bool dark;
   final bool showCloseButton;
+  final bool showShareButton;
 
-  LogConsole({this.dark = false, this.showCloseButton = false});
+  LogConsole({
+    this.dark = false,
+    this.showCloseButton = false,
+    this.showShareButton = false,
+  });
 
-  static Future<void> open(BuildContext context, {required bool dark}) async {
+  static Future<void> open(
+    BuildContext context, {
+    required bool dark,
+    required bool showShareButton,
+  }) async {
     var logConsole = LogConsole(
       showCloseButton: true,
+      showShareButton: showShareButton,
       dark: dark,
     );
     PageRoute route;
@@ -23,7 +33,7 @@ class LogConsole extends StatefulWidget {
     await Navigator.push(context, route);
   }
 
-  static void add(OutputEvent outputEvent, {int bufferSize = 20}) {
+  static void add(OutputEvent outputEvent, {int bufferSize = 30000}) {
     while (_outputEventBuffer.length >= (bufferSize)) {
       _outputEventBuffer.removeFirst();
     }
@@ -266,10 +276,57 @@ class _LogConsoleState extends State<LogConsole> {
               _filterLevel = value as Level;
               _refreshFilter();
             },
-          )
+          ),
+          ElevatedButton(
+            onPressed: _shareLogs,
+            child: Text('share'),
+          ),
         ],
       ),
     );
+  }
+
+  void _shareLogs() async {
+    List<String> lines = [];
+    _outputEventBuffer.forEach((element) {
+      lines.addAll(element.lines);
+    });
+
+    String? logPath = await _writeLog(lines);
+    if (logPath == null) return;
+    Share.shareFiles([logPath], text: 'log');
+  }
+
+  Future<String?> _writeLog(List<String> logBuffer) async {
+    DateTime now = DateTime.now();
+    String documentsPath = (await getTemporaryDirectory()).path;
+    String name = 'log_${now.month}-${now.day}-${now.hour}:${now.minute}.log';
+    String path = '$documentsPath/$name';
+    File logFile = File(path);
+
+    int _startIndex = 0;
+    int _endIndex = 0;
+
+    try {
+      int len = logBuffer.length;
+      if (len > _endIndex) {
+        _startIndex = _endIndex;
+        _endIndex = len;
+        Iterable<String> range = logBuffer.getRange(_startIndex, _endIndex);
+        File file = await logFile.writeAsString(
+          range.join('\n'),
+          mode: FileMode.write,
+          flush: false,
+        );
+        print('写入文件成功, ${file.path}');
+        return file.path;
+      } else {
+        return path;
+      }
+    } catch (e) {
+      print('Log 写入日志错误!!!, \n${e.toString()}\n');
+      return null;
+    }
   }
 
   void _scrollToBottom() async {

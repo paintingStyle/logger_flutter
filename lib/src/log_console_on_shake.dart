@@ -4,11 +4,13 @@ class LogConsoleOnShake extends StatefulWidget {
   final Widget child;
   final bool dark;
   final bool debugOnly;
+  final bool showShareButton;
 
   LogConsoleOnShake({
     required this.child,
     this.dark = true,
     this.debugOnly = true,
+    this.showShareButton = false,
   });
 
   @override
@@ -47,7 +49,11 @@ class _LogConsoleOnShakeState extends State<LogConsoleOnShake> {
     if (_open) return;
 
     _open = true;
-    await LogConsole.open(context, dark: widget.dark);
+    await LogConsole.open(
+      context,
+      dark: widget.dark,
+      showShareButton: widget.showShareButton,
+    );
     _open = false;
   }
 
